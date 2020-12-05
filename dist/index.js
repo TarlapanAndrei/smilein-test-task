@@ -1,0 +1,27 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+require("reflect-metadata");
+var express_1 = __importDefault(require("express"));
+var morgan_1 = __importDefault(require("morgan"));
+var cors_1 = __importDefault(require("cors"));
+var typeorm_1 = require("typeorm");
+var user_routes_1 = __importDefault(require("./routes/user.routes"));
+var blog_routes_1 = __importDefault(require("./routes/blog.routes"));
+var body_parser_1 = __importDefault(require("body-parser"));
+var dotenv_1 = __importDefault(require("dotenv"));
+var error_handler_1 = require("./utils/error-handler");
+typeorm_1.createConnection();
+dotenv_1.default.config({ path: './config.env' });
+var app = express_1.default();
+app.use(cors_1.default());
+app.use(morgan_1.default('dev'));
+app.use(express_1.default.json());
+app.use(body_parser_1.default.urlencoded({ extended: false }));
+app.use('/api/v1/users', user_routes_1.default);
+app.use('/api/v1/blogs', blog_routes_1.default);
+app.use(error_handler_1.apiErrorHandler);
+app.listen(3000);
+console.log('server on port', 3000);
