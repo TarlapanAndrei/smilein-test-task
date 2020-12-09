@@ -79,12 +79,25 @@ var getUser = function (req, res, next) { return __awaiter(void 0, void 0, void 
     });
 }); };
 exports.getUser = getUser;
-var deleteUsers = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+var deleteUsers = function (req, res, next) { return __awaiter(void 0, void 0, void 0, function () {
+    var userToDelete;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, typeorm_1.getRepository(User_1.User).delete(req.params.id)];
+            case 0: return [4 /*yield*/, typeorm_1.getConnection()
+                    .createQueryBuilder()
+                    .delete()
+                    .from(User_1.User)
+                    .returning("*")
+                    .where("id = :id", { id: req.body.userId })
+                    .execute()
+                    .then(function (response) {
+                    return response.affected;
+                })];
             case 1:
-                _a.sent();
+                userToDelete = _a.sent();
+                if (!userToDelete) {
+                    return [2 /*return*/, next(new api_error_1.default(404, 'no User with this Id'))];
+                }
                 return [2 /*return*/, res.status(201).json({
                         status: 'success',
                         data: 'deleted'

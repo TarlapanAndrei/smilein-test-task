@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { getRepository } from 'typeorm';
+import { getRepository, getConnection } from 'typeorm';
 import { User } from '../entity/User';
 import { catchAsync } from '../utils/catchAsync';
 import { UserRoleEnum } from '../utils/user-role.enum';
@@ -26,8 +26,21 @@ export const getUser = async (req: Request, res: Response, next: NextFunction): 
     data: user
   });
 }
-export const deleteUsers = async (req: Request, res: Response): Promise<Response> => {
-  await getRepository(User).delete(req.params.id);
+export const deleteUsers = async (req: Request, res: Response, next: NextFunction): Promise<Response| void> => {
+
+  const userToDelete: number | null | undefined = await getConnection()
+      .createQueryBuilder()
+      .delete()
+      .from(User)
+      .returning("*")
+      .where("id = :id", { id: req.body.userId })
+      .execute()
+      .then((response)=> {
+        return response.affected;
+      });
+      if(!userToDelete) {
+        return next( new ApiError(404, 'no User with this Id'))
+      }
 
   return res.status(201).json({
     status:'success',
