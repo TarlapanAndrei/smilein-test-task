@@ -32,8 +32,8 @@ var Blog = /** @class */ (function (_super) {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     __decorate([
-        typeorm_1.PrimaryGeneratedColumn(),
-        __metadata("design:type", Number)
+        typeorm_1.PrimaryGeneratedColumn('uuid'),
+        __metadata("design:type", String)
     ], Blog.prototype, "id", void 0);
     __decorate([
         typeorm_1.Column(),
@@ -48,20 +48,24 @@ var Blog = /** @class */ (function (_super) {
         __metadata("design:type", Boolean)
     ], Blog.prototype, "active", void 0);
     __decorate([
+        typeorm_1.CreateDateColumn(),
+        __metadata("design:type", Date)
+    ], Blog.prototype, "createdAt", void 0);
+    __decorate([
+        typeorm_1.UpdateDateColumn(),
+        __metadata("design:type", Date)
+    ], Blog.prototype, "updatedAt", void 0);
+    __decorate([
         typeorm_1.Column(),
         __metadata("design:type", String)
     ], Blog.prototype, "ownerId", void 0);
     __decorate([
-        typeorm_1.ManyToOne(function () { return User_1.User; }, function (user) { return user.blogs; }),
+        typeorm_1.ManyToOne(function () { return User_1.User; }, function (user) { return user.blogs; }, { onDelete: 'CASCADE', onUpdate: 'CASCADE' }),
         typeorm_1.JoinColumn({ name: "ownerId" }),
         __metadata("design:type", User_1.User)
     ], Blog.prototype, "owner", void 0);
     __decorate([
-        typeorm_1.Column(),
-        __metadata("design:type", Number)
-    ], Blog.prototype, "blogId", void 0);
-    __decorate([
-        typeorm_1.OneToMany(function () { return Comment_1.Comment; }, function (comment) { return comment.blog; }),
+        typeorm_1.OneToMany(function () { return Comment_1.Comment; }, function (comment) { return comment.blog; }, { onDelete: 'CASCADE', onUpdate: 'CASCADE' }),
         __metadata("design:type", Array)
     ], Blog.prototype, "comments", void 0);
     Blog = __decorate([

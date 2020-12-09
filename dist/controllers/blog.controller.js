@@ -39,7 +39,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getPersonalBlogs = exports.deleteBlog = exports.createBlog = exports.updateBlog = exports.getBlog = exports.getBlogs = void 0;
+exports.chechIfTheBlogIsPublished = exports.publishBlog = exports.getPersonalBlogs = exports.deleteBlog = exports.createBlog = exports.updateBlog = exports.getOneBlog = exports.getBlogs = void 0;
 var typeorm_1 = require("typeorm");
 var Blog_1 = require("../entity/Blog");
 var catchAsync_1 = require("../utils/catchAsync");
@@ -50,53 +50,54 @@ exports.getBlogs = catchAsync_1.catchAsync(function (req, res) { return __awaite
         switch (_a.label) {
             case 0: return [4 /*yield*/, typeorm_1.getRepository(Blog_1.Blog).find({
                     where: [
-                        { active: true },
-                        { active: false, ownerId: req.body.user.id }
+                        { active: true }
                     ]
                 })];
             case 1:
                 blogs = _a.sent();
                 return [2 /*return*/, res.status(200).json({
                         status: 'success',
-                        length: blogs.length,
+                        results: blogs.length,
                         data: blogs
                     })];
         }
     });
 }); });
-exports.getBlog = catchAsync_1.catchAsync(function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+exports.getOneBlog = catchAsync_1.catchAsync(function (req, res, next) { return __awaiter(void 0, void 0, void 0, function () {
     var blog;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, typeorm_1.getRepository(Blog_1.Blog).findOne(req.params.id)];
+            case 0: return [4 /*yield*/, typeorm_1.getRepository(Blog_1.Blog).findOne({ where: [{ id: req.params.id, ownerId: req.body.user.id }, { id: req.params.id, active: true }] })];
             case 1:
                 blog = _a.sent();
-                return [2 /*return*/, res.status(200).json(blog)];
+                if (!blog) {
+                    return [2 /*return*/, next(new api_error_1.default(404, "Blog not found"))];
+                }
+                return [2 /*return*/, res.status(200).json({
+                        status: "success",
+                        data: { blog: blog }
+                    })];
         }
     });
 }); });
-exports.updateBlog = catchAsync_1.catchAsync(function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+exports.updateBlog = catchAsync_1.catchAsync(function (req, res, next) { return __awaiter(void 0, void 0, void 0, function () {
     var blog, results;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, typeorm_1.getRepository(Blog_1.Blog).findOne(req.params.id)];
+            case 0: return [4 /*yield*/, typeorm_1.getRepository(Blog_1.Blog).findOneOrFail(req.params.id)];
             case 1:
                 blog = _a.sent();
-                if (!blog) return [3 /*break*/, 4];
-                return [4 /*yield*/, typeorm_1.getRepository(Blog_1.Blog).merge(blog, req.body)];
-            case 2:
-                _a.sent();
+                if (!blog) {
+                    return [2 /*return*/, next(new api_error_1.default(404, 'Blog not found'))];
+                }
+                typeorm_1.getRepository(Blog_1.Blog).merge(blog, req.body);
                 return [4 /*yield*/, typeorm_1.getRepository(Blog_1.Blog).save(blog)];
-            case 3:
+            case 2:
                 results = _a.sent();
                 return [2 /*return*/, res.status(200).json({
                         status: 'success',
                         data: results
                     })];
-            case 4: return [2 /*return*/, res.status(404).json({
-                    status: 'error',
-                    data: 'not found'
-                })];
         }
     });
 }); });
@@ -112,7 +113,8 @@ exports.createBlog = catchAsync_1.catchAsync(function (req, res, next) { return 
                     title: req.body.title,
                     content: req.body.content,
                     ownerId: req.body.user.id,
-                    blogId: req.body.blogId
+                    blogId: req.body.blogId,
+                    active: req.body.active
                 };
                 newBlog = typeorm_1.getRepository(Blog_1.Blog).create(blog);
                 return [4 /*yield*/, typeorm_1.getRepository(Blog_1.Blog).save(newBlog)];
@@ -125,12 +127,28 @@ exports.createBlog = catchAsync_1.catchAsync(function (req, res, next) { return 
         }
     });
 }); });
-exports.deleteBlog = catchAsync_1.catchAsync(function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+exports.deleteBlog = catchAsync_1.catchAsync(function (req, res, next) { return __awaiter(void 0, void 0, void 0, function () {
+    var deletedBlog, deletedBlog;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, typeorm_1.getRepository(Blog_1.Blog).delete(req.params.id)];
+            case 0:
+                if (!(req.body.user.role === 'ADMIN' || req.body.user.role === 'SUPERADMIN')) return [3 /*break*/, 2];
+                return [4 /*yield*/, typeorm_1.getRepository(Blog_1.Blog).delete({ id: req.params.id, active: true })];
             case 1:
-                _a.sent();
+                deletedBlog = _a.sent();
+                if (deletedBlog.affected === 0) {
+                    return [2 /*return*/, next(new api_error_1.default(404, "No published Blog with this Id"))];
+                }
+                return [2 /*return*/, res.status(201).json({
+                        status: 'success',
+                        data: 'deleted'
+                    })];
+            case 2: return [4 /*yield*/, typeorm_1.getRepository(Blog_1.Blog).delete({ id: req.params.id, ownerId: req.body.user.id })];
+            case 3:
+                deletedBlog = _a.sent();
+                if (deletedBlog.affected === 0) {
+                    return [2 /*return*/, next(new api_error_1.default(404, "You don't have a personal blog with this Id"))];
+                }
                 return [2 /*return*/, res.status(201).json({
                         status: 'success',
                         data: 'deleted'
@@ -139,16 +157,17 @@ exports.deleteBlog = catchAsync_1.catchAsync(function (req, res) { return __awai
     });
 }); });
 exports.getPersonalBlogs = catchAsync_1.catchAsync(function (req, res, next) { return __awaiter(void 0, void 0, void 0, function () {
-    var personalBlogs;
+    var user, personalBlogs;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
-                console.log(req.params.id);
-                console.log(req.body.user.id);
-                if (!(req.params.id === req.body.user.id)) return [3 /*break*/, 2];
+                user = req.body.user;
+                if (!user) {
+                    return [2 /*return*/, next(new api_error_1.default(403, 'You are not logged in, please log in'))];
+                }
                 return [4 /*yield*/, typeorm_1.getRepository(Blog_1.Blog).find({
                         where: {
-                            "ownerId": req.params.id
+                            "ownerId": req.body.user.id
                         }
                     })];
             case 1:
@@ -158,10 +177,49 @@ exports.getPersonalBlogs = catchAsync_1.catchAsync(function (req, res, next) { r
                         quantity: personalBlogs.length,
                         data: personalBlogs,
                     })];
-            case 2:
-                exports.getBlogs(req, res, next);
-                _a.label = 3;
-            case 3: return [2 /*return*/];
+        }
+    });
+}); });
+exports.publishBlog = catchAsync_1.catchAsync(function (req, res, next) { return __awaiter(void 0, void 0, void 0, function () {
+    var publishUnpublish;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, typeorm_1.getConnection()
+                    .createQueryBuilder()
+                    .update(Blog_1.Blog)
+                    .set({
+                    active: req.body.active
+                })
+                    .returning("*")
+                    .where({ id: req.params.id, ownerId: req.body.user.id })
+                    .execute()
+                    .then(function (response) {
+                    return response.raw[0];
+                })];
+            case 1:
+                publishUnpublish = _a.sent();
+                if (!publishUnpublish) {
+                    return [2 /*return*/, next(new api_error_1.default(404, 'No comment with that ID'))];
+                }
+                return [2 /*return*/, res.status(200).json({
+                        status: 'success',
+                        data: publishUnpublish
+                    })];
+        }
+    });
+}); });
+exports.chechIfTheBlogIsPublished = catchAsync_1.catchAsync(function (req, res, next) { return __awaiter(void 0, void 0, void 0, function () {
+    var blog;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, typeorm_1.getRepository(Blog_1.Blog).find({ where: { id: req.params.id, active: true } })];
+            case 1:
+                blog = _a.sent();
+                if (blog.length === 0) {
+                    return [2 /*return*/, next(new api_error_1.default(404, 'no published blog found with this id'))];
+                }
+                next();
+                return [2 /*return*/];
         }
     });
 }); });

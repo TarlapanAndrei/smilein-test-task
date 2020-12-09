@@ -35,11 +35,15 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteUsers = exports.createUser = exports.updateUser = exports.getUser = exports.getUsers = void 0;
+exports.uptateTheRole = exports.deleteUsers = exports.getUser = exports.getUsers = void 0;
 var typeorm_1 = require("typeorm");
 var User_1 = require("../entity/User");
 var catchAsync_1 = require("../utils/catchAsync");
+var api_error_1 = __importDefault(require("../utils/api-error"));
 exports.getUsers = catchAsync_1.catchAsync(function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var users;
     return __generator(this, function (_a) {
@@ -57,66 +61,24 @@ exports.getUsers = catchAsync_1.catchAsync(function (req, res) { return __awaite
         }
     });
 }); });
-var getUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+var getUser = function (req, res, next) { return __awaiter(void 0, void 0, void 0, function () {
     var user;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0: return [4 /*yield*/, typeorm_1.getRepository(User_1.User).findOne(req.params.id)];
             case 1:
                 user = _a.sent();
-                return [2 /*return*/, res.status(200).json(user)];
+                if (!user) {
+                    return [2 /*return*/, next(new api_error_1.default(404, 'no user with this id'))];
+                }
+                return [2 /*return*/, res.status(200).json({
+                        status: 'success',
+                        data: user
+                    })];
         }
     });
 }); };
 exports.getUser = getUser;
-var updateUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var user, results;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0: return [4 /*yield*/, typeorm_1.getRepository(User_1.User).findOne(req.params.id)];
-            case 1:
-                user = _a.sent();
-                if (!user) return [3 /*break*/, 4];
-                return [4 /*yield*/, typeorm_1.getRepository(User_1.User).merge(user, req.body)];
-            case 2:
-                _a.sent();
-                return [4 /*yield*/, typeorm_1.getRepository(User_1.User).save(user)];
-            case 3:
-                results = _a.sent();
-                return [2 /*return*/, res.status(200).json({
-                        status: 'success',
-                        data: results
-                    })];
-            case 4: return [2 /*return*/, res.status(404).json({
-                    status: 'error',
-                    data: 'not found'
-                })];
-        }
-    });
-}); };
-exports.updateUser = updateUser;
-var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var user, newUser;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0:
-                user = {
-                    firstName: req.body.firstName,
-                    lastName: req.body.lastName,
-                    email: req.body.email,
-                };
-                newUser = typeorm_1.getRepository(User_1.User).create(user);
-                return [4 /*yield*/, typeorm_1.getRepository(User_1.User).save(newUser)];
-            case 1:
-                _a.sent();
-                return [2 /*return*/, res.status(200).json({
-                        status: 'success',
-                        data: newUser
-                    })];
-        }
-    });
-}); };
-exports.createUser = createUser;
 var deleteUsers = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         switch (_a.label) {
@@ -131,3 +93,27 @@ var deleteUsers = function (req, res) { return __awaiter(void 0, void 0, void 0,
     });
 }); };
 exports.deleteUsers = deleteUsers;
+exports.uptateTheRole = catchAsync_1.catchAsync(function (req, res, next) { return __awaiter(void 0, void 0, void 0, function () {
+    var userToUpdate, results;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, typeorm_1.getRepository(User_1.User).findOneOrFail(req.params.userId)];
+            case 1:
+                userToUpdate = _a.sent();
+                console.log(req.params.userId);
+                if (!userToUpdate) {
+                    return [2 /*return*/, next(new api_error_1.default(404, 'no user find with this id'))];
+                }
+                return [4 /*yield*/, typeorm_1.getRepository(User_1.User).merge(userToUpdate, req.body)];
+            case 2:
+                _a.sent();
+                return [4 /*yield*/, typeorm_1.getRepository(User_1.User).save(userToUpdate)];
+            case 3:
+                results = _a.sent();
+                return [2 /*return*/, res.status(200).json({
+                        status: 'success',
+                        data: results
+                    })];
+        }
+    });
+}); });

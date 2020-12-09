@@ -1,7 +1,8 @@
 import { Entity, Column, PrimaryGeneratedColumn, BaseEntity, OneToMany, BeforeInsert, CreateDateColumn, UpdateDateColumn, BeforeUpdate } from 'typeorm';
 import {v4 as uuid} from 'uuid';
-import { IsEmail, Length, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsEmail, Length, IsNotEmpty, IsOptional, IsEnum } from 'class-validator';
 import bcrypt from 'bcrypt';
+import { UserRoleEnum } from '../utils/user-role.enum';
 
 import { Blog } from './Blog';
 import { Comment } from './Comment';
@@ -13,6 +14,14 @@ export class User extends BaseEntity{
 
   @Column({type: 'uuid'})
   uuid: string;
+
+  @Column({
+    type: "enum",
+    enum: UserRoleEnum,
+    default: UserRoleEnum.user,
+  })
+  @IsEnum({type:UserRoleEnum, message: "you ca use 'USER' or 'ADMIN'"})
+  role: UserRoleEnum
 
   @Column()
   @Length(10, 20)
@@ -56,10 +65,10 @@ export class User extends BaseEntity{
       this.uuid = uuid();
     }
 
-  @OneToMany(()=> Blog, blog => blog.owner)
+  @OneToMany(()=> Blog, blog => blog.owner, {onDelete: 'CASCADE', onUpdate: 'CASCADE'})
   blogs: Blog[];
 
-  @OneToMany(()=> Comment, comment => comment.owner)
+  @OneToMany(()=> Comment, comment => comment.owner, {onDelete: 'CASCADE', onUpdate: 'CASCADE'})
   comments: Comment[];
 
 }

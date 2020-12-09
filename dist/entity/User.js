@@ -66,6 +66,7 @@ var typeorm_1 = require("typeorm");
 var uuid_1 = require("uuid");
 var class_validator_1 = require("class-validator");
 var bcrypt_1 = __importDefault(require("bcrypt"));
+var user_role_enum_1 = require("../utils/user-role.enum");
 var Blog_1 = require("./Blog");
 var Comment_1 = require("./Comment");
 var User = /** @class */ (function (_super) {
@@ -101,6 +102,15 @@ var User = /** @class */ (function (_super) {
         typeorm_1.Column({ type: 'uuid' }),
         __metadata("design:type", String)
     ], User.prototype, "uuid", void 0);
+    __decorate([
+        typeorm_1.Column({
+            type: "enum",
+            enum: user_role_enum_1.UserRoleEnum,
+            default: user_role_enum_1.UserRoleEnum.user,
+        }),
+        class_validator_1.IsEnum({ type: user_role_enum_1.UserRoleEnum, message: "you ca use 'USER' or 'ADMIN'" }),
+        __metadata("design:type", String)
+    ], User.prototype, "role", void 0);
     __decorate([
         typeorm_1.Column(),
         class_validator_1.Length(10, 20),
@@ -151,11 +161,11 @@ var User = /** @class */ (function (_super) {
         __metadata("design:returntype", void 0)
     ], User.prototype, "createUuid", null);
     __decorate([
-        typeorm_1.OneToMany(function () { return Blog_1.Blog; }, function (blog) { return blog.owner; }),
+        typeorm_1.OneToMany(function () { return Blog_1.Blog; }, function (blog) { return blog.owner; }, { onDelete: 'CASCADE', onUpdate: 'CASCADE' }),
         __metadata("design:type", Array)
     ], User.prototype, "blogs", void 0);
     __decorate([
-        typeorm_1.OneToMany(function () { return Comment_1.Comment; }, function (comment) { return comment.owner; }),
+        typeorm_1.OneToMany(function () { return Comment_1.Comment; }, function (comment) { return comment.owner; }, { onDelete: 'CASCADE', onUpdate: 'CASCADE' }),
         __metadata("design:type", Array)
     ], User.prototype, "comments", void 0);
     User = __decorate([

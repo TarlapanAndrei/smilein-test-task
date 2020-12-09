@@ -7,6 +7,7 @@ import bcrypt from 'bcrypt';
 import { User } from '../entity/User';
 import { catchAsync } from '../utils/catchAsync';
 import ApiError from '../utils/api-error';
+import { UserRoleEnum } from '../utils/user-role.enum';
 
 
 const signToken = (id: string) => {
@@ -79,12 +80,20 @@ export const protect = catchAsync(async(req: Request, res: Response, next: NextF
   next();
 })
 
-export const personalProtect = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  if(req.body.user !== req.params.id){
-    return next(new ApiError(401, 'you canot change personal data of ather users'))
+export const superAdminRestriction  = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  if(req.body.user.role !== UserRoleEnum.superadmin){
+    return next(new ApiError(403, 'only superadmin can make this change'))
   }
   next();
 })
+
+export const adminRestriction  = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  if(req.body.user.role !== UserRoleEnum.superadmin && req.body.user.role !== UserRoleEnum.admin){
+    return next(new ApiError(403, 'only superadmin and admin can make this change'))
+  }
+  next();
+})
+
 
 const correctPassword = async function(candidatePassword: string, userPassword: string) {
   return await bcrypt.compare(candidatePassword, userPassword)

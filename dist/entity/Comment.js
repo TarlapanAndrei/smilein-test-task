@@ -32,28 +32,36 @@ var Comment = /** @class */ (function (_super) {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     __decorate([
-        typeorm_1.PrimaryGeneratedColumn(),
-        __metadata("design:type", Number)
+        typeorm_1.PrimaryGeneratedColumn('uuid'),
+        __metadata("design:type", String)
     ], Comment.prototype, "id", void 0);
     __decorate([
         typeorm_1.Column(),
         __metadata("design:type", String)
     ], Comment.prototype, "content", void 0);
     __decorate([
+        typeorm_1.CreateDateColumn(),
+        __metadata("design:type", Date)
+    ], Comment.prototype, "createdAt", void 0);
+    __decorate([
+        typeorm_1.UpdateDateColumn(),
+        __metadata("design:type", Date)
+    ], Comment.prototype, "updatedAt", void 0);
+    __decorate([
         typeorm_1.PrimaryColumn(),
-        __metadata("design:type", Number)
+        __metadata("design:type", String)
     ], Comment.prototype, "ownerId", void 0);
     __decorate([
-        typeorm_1.ManyToOne(function () { return User_1.User; }, function (user) { return user.comments; }),
+        typeorm_1.ManyToOne(function () { return User_1.User; }, function (user) { return user.comments; }, { onDelete: 'CASCADE', onUpdate: 'CASCADE' }),
         typeorm_1.JoinColumn({ name: "ownerId" }),
         __metadata("design:type", User_1.User)
     ], Comment.prototype, "owner", void 0);
     __decorate([
         typeorm_1.PrimaryColumn(),
-        __metadata("design:type", Number)
+        __metadata("design:type", String)
     ], Comment.prototype, "blogId", void 0);
     __decorate([
-        typeorm_1.ManyToOne(function () { return Blog_1.Blog; }, function (blog) { return blog.comments; }),
+        typeorm_1.ManyToOne(function () { return Blog_1.Blog; }, function (blog) { return blog.comments; }, { onDelete: 'CASCADE', onUpdate: 'CASCADE' }),
         typeorm_1.JoinColumn({ name: "blogId" }),
         __metadata("design:type", Blog_1.Blog)
     ], Comment.prototype, "blog", void 0);

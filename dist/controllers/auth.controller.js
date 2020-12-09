@@ -39,13 +39,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.personalProtect = exports.protect = exports.login = exports.singup = void 0;
+exports.adminRestriction = exports.superAdminRestriction = exports.protect = exports.login = exports.singup = void 0;
 var typeorm_1 = require("typeorm");
 var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 var bcrypt_1 = __importDefault(require("bcrypt"));
 var User_1 = require("../entity/User");
 var catchAsync_1 = require("../utils/catchAsync");
 var api_error_1 = __importDefault(require("../utils/api-error"));
+var user_role_enum_1 = require("../utils/user-role.enum");
 var signToken = function (id) {
     return jsonwebtoken_1.default.sign({ id: id }, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRES_IN
@@ -141,10 +142,19 @@ exports.protect = catchAsync_1.catchAsync(function (req, res, next) { return __a
         }
     });
 }); });
-exports.personalProtect = catchAsync_1.catchAsync(function (req, res, next) { return __awaiter(void 0, void 0, void 0, function () {
+exports.superAdminRestriction = catchAsync_1.catchAsync(function (req, res, next) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
-        if (req.body.user !== req.params.id) {
-            return [2 /*return*/, next(new api_error_1.default(401, 'you canot change personal data of ather users'))];
+        if (req.body.user.role !== user_role_enum_1.UserRoleEnum.superadmin) {
+            return [2 /*return*/, next(new api_error_1.default(403, 'only superadmin can make this change'))];
+        }
+        next();
+        return [2 /*return*/];
+    });
+}); });
+exports.adminRestriction = catchAsync_1.catchAsync(function (req, res, next) { return __awaiter(void 0, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+        if (req.body.user.role !== user_role_enum_1.UserRoleEnum.superadmin && req.body.user.role !== user_role_enum_1.UserRoleEnum.admin) {
+            return [2 /*return*/, next(new api_error_1.default(403, 'only superadmin and admin can make this change'))];
         }
         next();
         return [2 /*return*/];

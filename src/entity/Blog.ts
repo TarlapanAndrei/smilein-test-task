@@ -1,11 +1,12 @@
-import { Entity, Column, PrimaryGeneratedColumn, BaseEntity, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, BaseEntity, OneToMany, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { User } from './User';
 import { Comment } from './Comment';
+import {v4 as uuid} from 'uuid';
 
 @Entity('blogs')
 export class Blog extends BaseEntity{
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   title: string;
@@ -16,14 +17,18 @@ export class Blog extends BaseEntity{
   @Column({default: false})
   active: boolean;
 
+  @CreateDateColumn()
+  createdAt: Date
+
+  @UpdateDateColumn()
+  updatedAt: Date
+
   @Column()
   ownerId: string;
-  @ManyToOne(()=> User, user => user.blogs)
+  @ManyToOne(()=> User, user => user.blogs, {onDelete: 'CASCADE', onUpdate: 'CASCADE'})
   @JoinColumn({name: "ownerId"})
   owner: User;
 
-  @Column()
-  blogId: number;
-  @OneToMany(()=> Comment, comment => comment.blog)
+  @OneToMany(()=> Comment, comment => comment.blog, {onDelete: 'CASCADE', onUpdate: 'CASCADE'})
   comments: Comment[];
 }
